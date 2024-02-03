@@ -1,0 +1,7 @@
+##icon=image/bird.svg
+import "./Gameplay.prgm";
+
+window = Window("Brick Breaker", 700, 600);
+
+gameplay = Gameplay(window);
+

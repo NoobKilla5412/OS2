@@ -1,0 +1,26 @@
+##icon=image/europe.svg
+import "utils/Point";
+import "utils/Array";
+
+window = Window("Europe Takeover", 800, 600);
+g = window.getGraphics();
+
+money = 0;
+
+class Object {
+  position = Point();
+
+  constructor(x = 0, y = 0) {
+    this.position = Point(x, y);
+  }
+
+  static objects = Array();
+}
+
+function main() {
+
+}
+
+_while (true) {
+  main();
+}

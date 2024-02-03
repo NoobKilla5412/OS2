@@ -1,0 +1,84 @@
+class Gameplay {
+  play  = false;
+  score = 0;
+
+  totalBricks = 21;
+
+  time  = null;
+  delay = 8;
+
+  playerX = 310;
+
+  ballPosX = 120;
+  ballPosY = 350;
+  ballVelX = -1;
+  ballVelY = -2;
+
+  window = null;
+  g      = null;
+
+  keys = object {};
+
+  constructor(window) {
+    this.window = window;
+    this.g      = this.window.getGraphics();
+    listen("keydown", function (e) this.keys[e.key] = true, this.window);
+    listen("keyup", function (e) this.keys[e.key] = false, this.window);
+
+    # _while (true) {
+    #   this.update();
+    #   sleep(this.delay);
+    # }
+  }
+
+  paint(g) {
+    # Background
+    g.fillStyle = "black";
+    g.clearScreen();
+
+    # Borders
+    g.fillStyle = "yellow";
+    g.fillRect(0, 0, 3, this.window.height);
+    g.fillRect(0, 0, this.window.width, 3);
+    g.fillRect(this.window.width - 3, 0, 3, this.window.height);
+
+    # The paddle
+    g.fillStyle = "green";
+    g.fillRect(this.playerX, 550, 100, 8);
+
+    # The ball
+    g.fillStyle = "yellow";
+    g.fillRect(this.ballPosX, this.ballPosY, 20, 20);
+  }
+
+  update() {
+    this.paint(this.g);
+  }
+
+  keyPressed(e) {
+    if (e.key == "d" || e.key == "ArrowRight") {
+      if (this.playerX + 103 >= this.window.width) {
+        this.playerX = this.window.width - 103;
+      } else {
+        this.moveRight();
+      }
+    }
+    if (e.key == "a" || e.key == "ArrowLeft") {
+      if (this.playerX <= 3) {
+        this.playerX = 3;
+      } else {
+        this.moveLeft();
+      }
+    }
+  }
+
+  moveRight() {
+    this.play = true;
+    this.playerX += 20;
+  }
+
+  moveLeft() {
+    this.play = true;
+    this.playerX -= 20;
+  }
+}

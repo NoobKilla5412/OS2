@@ -1,0 +1,310 @@
+##icon=image/bird.svg
+import "utils/Map";
+
+window = Window("Bird", 700, 400);
+g = window.getGraphics();
+
+myGamePiece = null;
+myObstacles = Array();
+myScore = null;
+winScore = null;
+class Scores {
+  mouse = 0;
+  arrows = 0;
+}
+scores = Scores();
+isPaused = false;
+pauseGame = null;
+lengthOfGap = 100;
+maxLengthOfHole = 100;
+minLengthOfHole = 200;
+oBSSpeed = -2;
+controlMethod = 0;
+highScore = 0;
+blockSpeed = 1.5; # Speed for arrow use only
+score = 0;
+# Start the game using the mouse
+function startGame() {
+  myGamePiece = Component(30, 30, "red", 50, 120); # Spawn the player
+  myScore = Component("30px", "Consolas", "black", 280, 40, "text"); # Score
+  winScore = Component("30px", "Consolas", "black", 450, 200, "text");
+  if !storage.getItem("scores") {
+    storage.setItem("scores", scores);
+  } else {
+    scores = storage.getItem("scores");
+    highScore = scores.mouse;
+  }
+  myGameArea.start();
+}
+# Start the game using arrows
+function useArrows() {
+  controlMethod = 1;
+  startGame();
+}
+
+myGameArea = (class {
+  x = 0;
+  y = 0;
+
+  keys = Map();
+
+  running = true;
+
+  start() {
+    # hide the original cursor
+    # if (controlMethod == 0) {
+    #   window.style.cursor = "none";
+    # };
+    this.frameNo = 0;
+    _while (this.running) {
+      updateGameArea();
+    }
+    listen("keydown", function (e) {
+      this.keys.set(e.key, true);
+    }, window);
+    listen("keyup", function (e) {
+      this.keys.set(e.key, false);
+    }, window);
+    listen("mousemove", function (e) {
+      this.x = e.x;
+      this.y = e.y;
+    }, window);
+  }
+
+  clear() {
+    g.clearScreen();
+  }
+
+  stop() {
+    # Try to set the highScore var
+    # if (controlMethod == 0) {
+    #   if (score > storage.getItem("scores").mouse) {
+    #     scores = storage.getItem("scores");
+    #     scores.mouse = score;
+    #     storage.setItem("scores", scores);
+    #   };
+    # } else {
+    #   if (score > storage.getItem("scores").arrows) {
+    #     scores = storage.getItem("scores");
+    #     scores.arrows = score;
+    #     storage.setItem("scores", scores);
+    #   };
+    # };
+    # Stop the game
+    this.running = false;
+    myScore.text = "Your final score is: " + score;
+    this.clear();
+    myScore.update();
+    # exit();
+  }
+})();
+
+class Component {
+  constructor(width, height, color, x, y, type) {
+    this.type = type;
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;
+    this.x = x;
+    this.y = y;
+    this.color = color;
+  }
+
+  update() {
+    if (this.type == "text") {
+      g.font = this.width + " " + this.height;
+      g.fillStyle = this.color;
+      g.fillText(this.text, this.x, this.y);
+    } else {
+      if (
+        this.x >= 0 &&
+        this.x + this.width <= window.width &&
+        this.y >= 0 &&
+        this.y + this.height <= window.height
+      ) {
+        g.fillStyle = this.color;
+        g.fillRect(this.x, this.y, this.width, this.height);
+      }
+    }
+  }
+
+  newPos() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    this.hitRight();
+    this.hitLeft();
+  }
+
+  hitRight() {
+    if (this.x > window.width - this.width) {
+      this.x = window.width - this.width;
+    }
+  }
+
+  hitLeft() {
+    if (myGamePiece.x < 0) {
+      this.x = 0;
+    }
+  }
+
+  # check if `this` hits an obstacle
+  crashWith(otherobj) {
+    myleft = this.x;
+    myright = this.x + this.width;
+    mytop = this.y;
+    mybottom = this.y + this.height;
+    otherleft = otherobj.x;
+    otherright = otherobj.x + otherobj.width;
+    othertop = otherobj.y;
+    otherbottom = otherobj.y + otherobj.height;
+    crash = true;
+    if (mybottom < othertop || mytop > otherbottom || myright < otherleft || myleft > otherright) {
+      crash = false;
+    }
+    crash;
+  }
+}
+
+function updateGameArea() {
+  x = null; height = null; gap = null; minHeight = null; maxHeight = null;
+  minGap = null; maxGap = null;
+
+  myObstacles.forEach(function (obstacle) {
+    if (myGamePiece.crashWith(obstacle)) {
+      myGameArea.stop();
+    }
+  });
+
+  # clear the canvas
+  myGameArea.clear();
+
+  # make it harder each level
+  if (everyInterval(lengthOfGap * 10)) {
+    oBSSpeed -= 0.1;
+    lengthOfGap -= 10;
+  }
+  if (lengthOfGap < 10) {
+    lengthOfGap = 10;
+  }
+  # Generate the obstacles
+  if (everyInterval(lengthOfGap)) {
+    x = window.width;
+    minHeight = 100;
+    maxHeight = 200;
+    height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
+    minGap = minLengthOfHole;
+    maxGap = maxLengthOfHole;
+    gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
+    myObstacles.push(Component(15, height, "green", x, 0));
+    myObstacles.push(
+      Component(
+        15,
+        if x - height - gap > window.height
+          then window.height - (height + gap)
+          else x - height - gap,
+        "green",
+        x,
+        height + gap
+      )
+    );
+    score += 1;
+    # myObstacles.push(new Component(10, 201, "green", x, 0));
+    # myObstacles.push(new Component(10, x - height, "green", x, height));
+  }
+  # myObstacles.forEach(function (obs, i) {
+  #   if (obs.x + obs.width + obs.speedX < 0) {
+  #     myObstacles.delete(i);
+  #   };
+  # });
+  myGamePiece.speedX = 0; # reset the player's X speed
+  myGamePiece.speedY = 0; # reset the player's Y speed
+  if (controlMethod == 1 && !isPaused) {
+    # if using arrows and not paused
+    if (myGameArea.keys && myGameArea.keys.get("ArrowLeft")) {
+      # Left arrow
+      myGamePiece.speedX = -blockSpeed; # Left
+    }
+    if (myGameArea.keys && myGameArea.keys.get("ArrowRight")) {
+      # Right arrow
+      myGamePiece.speedX = blockSpeed; # Right
+    }
+    if (myGameArea.keys && myGameArea.keys.get("ArrowUp")) {
+      # Up arrow
+      myGamePiece.speedY = -blockSpeed; # Up
+    }
+    if (myGameArea.keys && myGameArea.keys.get("ArrowDown")) {
+      # Down arrow
+      myGamePiece.speedY = blockSpeed; # Down
+    }
+    # if using mouse and not paused
+  } else if (!isPaused) {
+    myGamePiece.x = myGameArea.x;
+    myGamePiece.y = myGameArea.y;
+  }
+  if (myGameArea.keys.get("`")) {
+    if (!isPaused) {
+      pauseGame = true; # pause the game
+      isPaused = true;
+    }
+  }
+  if (myGameArea.keys && myGameArea.keys.get("1")) {
+    if (isPaused) {
+      pauseGame = false; # unpause the game
+      isPaused = false;
+    }
+  }
+  # pause the game
+  if (pauseGame) {
+    myObstacles.forEach(function (obstacle) {
+      obstacle.speedX = 0;
+      obstacle.newPos();
+      obstacle.update();
+    });
+  } else {
+    # normal game
+    myObstacles.forEach(function (obstacle) {
+      obstacle.speedX = oBSSpeed;
+      obstacle.newPos();
+      obstacle.update();
+    });
+    myGameArea.frameNo += 1; # count the frames
+    myGamePiece.newPos(); # move the player
+  }
+  myGamePiece.update(); # redraw the player
+  # see if you have won:
+  if (controlMethod == 0 && score >= 100) {
+    winScore.text = "You Win! :D";
+    myGameArea.clear();
+    winScore.update();
+    myGameArea.stop();
+  } else {
+    # normal
+    # update the text of the scoreboard:
+    myScore.text = "SCORE: " + score + " LEVEL: " + (Math.trunc(score / 10) + 1) + " HIGH SCORE: " + highScore;
+    myScore.x = window.width / 2 - g.textWidth(myScore.text) / 2;
+    # document.getElementById('speed').innerHTML = "Speed: " + Math.round(10 * oBSSpeed) / 10;
+    myScore.update(); # update the scoreboard
+  }
+  # win if using the arrows:
+  if (controlMethod == 1 && score >= 80) {
+    winScore.text = "You Win! :D";
+    myGameArea.clear();
+    winScore.update();
+    myGameArea.stop();
+  } else {
+    # normal
+    # update the text of the scoreboard:
+    myScore.text = "SCORE: " + score + " LEVEL: " + (Math.trunc(score / 10) + 1) + " HIGH SCORE: " + highScore;
+    myScore.update(); # update the scoreboard
+  }
+}
+
+function everyInterval(n) {
+  # timings function
+  if ((myGameArea.frameNo / n) % 1 == 0) {
+    true;
+  } else false;
+}
+
+startGame();

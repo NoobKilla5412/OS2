@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30">
+  <rect x="13" y="0" width="4" height="15" stroke="transparent" fill="blue" />
+  <path d="M5 15L15 25L25 15" stroke="transparent" fill="blue" />
+
+  <path d="M0 25L0 30L30 30L30 25" stroke="blue" fill="transparent" stroke-width="4" />
+</svg>

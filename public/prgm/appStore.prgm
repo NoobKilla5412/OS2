@@ -1,0 +1,26 @@
+##icon=image/appStore.svg
+import "/std/Button";
+
+allApps = fetch("/prgm/allApps.txt").split("\n");
+
+window = Window("App Store", 800, 600);
+g = window.getGraphics();
+
+Button.init(window);
+
+button = Button(
+  0,
+  0,
+  100,
+  50,
+  function() {
+    println("Click");
+  },
+  object {
+    color: "gray"
+  }
+);
+
+_while (true) {
+  button.draw();
+}
