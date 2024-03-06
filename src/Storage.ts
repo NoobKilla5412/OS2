@@ -16,8 +16,8 @@ export function expandObjectRef(obj: any, key: string): [obj: any, key: string] 
 }
 
 export interface StorageObj {
-  getItem: (key: string) => string | null;
-  setItem: (key: string, value: string) => void;
+  getItem: (key: string) => Promise<string | null> | string | null;
+  setItem: (key: string, value: any) => Promise<void> | void;
 }
 
 export class Storage {
@@ -26,27 +26,58 @@ export class Storage {
   constructor(storageObj: StorageObj) {
     this.storageObj = storageObj;
   }
-  public getItem(name: string) {
+
+  public async getItem(name: string) {
     let path = name.split("::");
     let lsName = path.shift()!;
     if (!this.storageObj.getItem(lsName)) return null;
-    let data = JSON.parse(this.storageObj.getItem(lsName) || "{}");
+    let data = await this.storageObj.getItem(lsName);
     if (path.length > 0) return expandObject(data, path.join("::"));
     else return data;
   }
-  public setItem(name: string, value: any) {
+
+  public async setItem(name: string, value: any) {
     let path = name.split("::");
     let lsName = path.shift()!;
-    let data = JSON.parse(this.storageObj.getItem(lsName) || "{}");
+    let data = await this.storageObj.getItem(lsName);
     if (path.length > 0) {
       let [obj, key] = expandObjectRef(data, path.join("::"));
       obj[key] = value;
-      this.storageObj.setItem(lsName, JSON.stringify(data));
+      this.storageObj.setItem(lsName, data);
       return obj[key];
     } else {
-      this.storageObj.setItem(lsName, JSON.stringify(value));
+      this.storageObj.setItem(lsName, value);
     }
   }
 }
 
-export const storage = new Storage(localStorage);
+// export async function openDirectory() {
+//   // Feature detection. The API needs to be supported
+//   // and the app not run in an iframe.
+//   const supportsFileSystemAccess =
+//     "showDirectoryPicker" in window &&
+//     (() => {
+//       try {
+//         return window.self === window.top;
+//       } catch {
+//         return false;
+//       }
+//     })();
+
+//   // If the File System Access API is supported…
+//   if (supportsFileSystemAccess) {
+//     const root = await navigator.storage.getDirectory();
+//     console.log(root);
+//   } else {
+//     console.error("File System Access API is not supported.");
+//   }
+// }
+
+export const storage = new Storage({
+  async getItem(key) {
+    return JSON.parse(localStorage.getItem(key) || "null");
+  },
+  async setItem(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+});

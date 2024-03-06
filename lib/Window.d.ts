@@ -9,10 +9,10 @@ export declare class Window {
     y: number;
     width: number;
     height: number;
-    oldX: number;
-    oldY: number;
-    oldW: number;
-    oldH: number;
+    private oldX;
+    private oldY;
+    private oldW;
+    private oldH;
     hasFocus: boolean;
     private pid;
     xBtn: Button;

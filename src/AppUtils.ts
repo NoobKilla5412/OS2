@@ -137,9 +137,9 @@ let windows: PidAndData<Window>[] = [];
 let listeners: PidAndData<ReturnType<typeof Listeners.listen>>[] = [];
 
 export async function addApp(name: string) {
-  const apps = storage.getItem("apps");
-  if (!apps.includes(name)) {
-    apps.push(name);
+  const apps = await storage.getItem("apps");
+  if (!(name in apps)) {
+    apps[name] = await getAppSourceCode(name);
   }
   storage.setItem("apps", apps);
 }
@@ -147,12 +147,6 @@ export async function addApp(name: string) {
 export async function openApplication(name: string) {
   return new Promise<number>(async (resolve) => {
     if (name in applications) {
-      const apps = storage.getItem("apps");
-      if (!apps.includes(name)) {
-        apps.push(name);
-      }
-      storage.setItem("apps", apps);
-
       let pid = 0;
       processes.forEach((process) => {
         if (process.pid > pid) pid = process.pid;
@@ -178,21 +172,14 @@ export async function openApplication(name: string) {
         listeners.push({ pid, data: Listeners.listen(str, listener, window) });
       });
       env.def("Window", async (title: PRGM_String, width: number, height: number, x?: number, y?: number) => {
-        let window = new Window(
-          await title.toString(),
-          x ?? Window.WINDOWPOS_CENTERED_X,
-          y ?? Window.WINDOWPOS_CENTERED_Y,
-          width,
-          height,
-          pid
-        );
+        let window = new Window(await title.toString(), x ?? Window.WINDOWPOS_CENTERED_X, y ?? Window.WINDOWPOS_CENTERED_Y, width, height, pid);
         windows.push({ pid, data: window });
         return window;
       });
       env.def("storage", {
         async getItem(_name: PRGM_String) {
           let str = await _name.toString();
-          let res = storage.getItem(`app::${name}::${str}`);
+          let res = await storage.getItem(`app::${name}::${str}`);
           if (res === undefined) res = null;
           return res;
         },
@@ -201,7 +188,7 @@ export async function openApplication(name: string) {
           let _value;
           if (value.__isString__ === true) _value = await value.toString();
           else _value = value;
-          storage.setItem(`app::${name}::${str}`, value);
+          await storage.setItem(`app::${name}::${str}`, value);
           return value;
         }
       });
@@ -223,12 +210,12 @@ export async function openApplication(name: string) {
         return await toPRGM_String(await (await fetch(url)).text(), env);
       });
 
-      let exitCode = evaluate(parse(applications[name].data), env, pid, name.split("/").slice(0, -1).join("/"), (code) => {
+      let exitCode = await evaluate(parse(applications[name].data), env, pid, name.split("/").slice(0, -1).join("/"), (code) => {
         _stopApp(pid);
       });
       return exitCode;
     } else {
-      defineApplication(name, await getAppSourceCode(name));
+      defineApplication(name, (await storage.getItem("apps"))[name]);
       await openApplication(name);
       return;
       console.error(`Application "${name}" not found.`);

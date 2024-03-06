@@ -15,10 +15,10 @@ export class Window {
   public y: number;
   public width: number;
   public height: number;
-  public oldX: number;
-  public oldY: number;
-  public oldW: number;
-  public oldH: number;
+  private oldX: number;
+  private oldY: number;
+  private oldW: number;
+  private oldH: number;
   public hasFocus = false;
   private pid: number;
   public xBtn: Button;
@@ -28,15 +28,7 @@ export class Window {
   drawBuffer: HTMLCanvasElement;
   c_drawBuffer: CanvasRenderingContext2D;
 
-  constructor(
-    title: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    pid: number,
-    options?: Partial<WindowOptions>
-  ) {
+  constructor(title: string, x: number, y: number, width: number, height: number, pid: number, options?: Partial<WindowOptions>) {
     this.options = Object.assign({}, defaultWindowOptions, options);
     this.pid = pid;
 
@@ -139,18 +131,22 @@ export class Window {
   titleBarClicked = false;
 
   move() {
-    if (this.hasFocus) {
+    if (mouse.y <= Math.floor(this.y + 5 - Window.titleHeight) && mouse.y >= Math.floor(this.y - Window.titleHeight)) {
+      canvas.style.cursor = "ns-resize";
       if (this.titleBarClicked) {
-        this.pos1 = this.pos3 - mouse.x;
-        this.pos2 = this.pos4 - mouse.y;
-        this.pos3 = mouse.x;
-        this.pos4 = mouse.y;
-        this.y -= this.pos2;
-        this.x -= this.pos1;
       }
-      // if (mouse.y <= Math.floor(this.y + 5 - Window.titleHeight) && mouse.y >= Math.floor(this.y - Window.titleHeight))
-      //   canvas.style.cursor = "n-resize";
-      // else canvas.style.cursor = "default";
+    } else {
+      canvas.style.cursor = "default";
+      if (this.hasFocus) {
+        if (this.titleBarClicked) {
+          this.pos1 = this.pos3 - mouse.x;
+          this.pos2 = this.pos4 - mouse.y;
+          this.pos3 = mouse.x;
+          this.pos4 = mouse.y;
+          this.y -= this.pos2;
+          this.x -= this.pos1;
+        }
+      }
     }
   }
 
@@ -215,13 +211,7 @@ export class Window {
   static clickAll() {
     for (let i = 0; i < this.windows.length; i++) {
       const window = this.windows[i];
-      if (
-        mouse.x > window.x &&
-        mouse.x < window.x + window.width &&
-        mouse.y > window.y - Window.titleHeight &&
-        mouse.y < window.y + window.height &&
-        mouseDown
-      ) {
+      if (mouse.x > window.x && mouse.x < window.x + window.width && mouse.y > window.y - Window.titleHeight && mouse.y < window.y + window.height && mouseDown) {
         // if (
         //   !(
         //     mouse.x > this.windows[0].x &&
