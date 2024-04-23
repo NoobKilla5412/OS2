@@ -54,14 +54,14 @@ export class Graphics {
   }
 
   clearRect(x: number, y: number, w: number, h: number) {
-    // c.fillStyle = "white";
+    this.target.c_drawBuffer.fillStyle = "white";
     // c.fillRect(x + this.target.x, y + this.target.y, w, h);
     this.target.c_drawBuffer.clearRect(x, y, w, h);
   }
 
   clearScreen() {
     // this.clearRect(0, 0, this.target.width, this.target.height);
-    this.fillRect(0, 0, this.target.drawBuffer.width, this.target.drawBuffer.height);
+    this.clearRect(0, 0, this.target.drawBuffer.width, this.target.drawBuffer.height);
   }
 
   fillStyle = new PRGM_String();

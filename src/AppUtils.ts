@@ -1,6 +1,6 @@
 // export let whileLoops: ({ handler: () => void; condition: () => boolean; done: boolean; pid: number } | null)[] = [];
 
-import { Environment, PRGM_String, defaultEnv, evaluate, parse, toPRGM_String } from "prgm-lang";
+import { Environment, PRGM_String, defaultEnv, evaluate, parse } from "prgm-lang";
 import { canvas } from ".";
 import { Point } from "./Graphics/Point";
 import { storage } from "./Storage";
@@ -137,9 +137,9 @@ let windows: PidAndData<Window>[] = [];
 let listeners: PidAndData<ReturnType<typeof Listeners.listen>>[] = [];
 
 export async function addApp(name: string) {
-  const apps = await storage.getItem("apps");
-  if (!(name in apps)) {
-    apps[name] = await getAppSourceCode(name);
+  const apps: string[] = await storage.getItem("apps");
+  if (!apps.includes(name)) {
+    apps.push(name);
   }
   storage.setItem("apps", apps);
 }
@@ -205,17 +205,13 @@ export async function openApplication(name: string) {
       env.def("console", {
         log: println
       });
-      env.def("fetch", async (_url: PRGM_String) => {
-        let url = await _url.toString();
-        return await toPRGM_String(await (await fetch(url)).text(), env);
-      });
 
       let exitCode = await evaluate(parse(applications[name].data), env, pid, name.split("/").slice(0, -1).join("/"), (code) => {
         _stopApp(pid);
       });
       return exitCode;
     } else {
-      defineApplication(name, (await storage.getItem("apps"))[name]);
+      defineApplication(name, await getAppSourceCode(name));
       await openApplication(name);
       return;
       console.error(`Application "${name}" not found.`);

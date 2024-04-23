@@ -23,6 +23,6 @@
   "dependencies": {
     "http-server": "^14.1.1",
     "idb": "^8.0.0",
-    "prgm-lang": "^1.3.0"
+    "prgm-lang": "^1.4.7"
   }
 }

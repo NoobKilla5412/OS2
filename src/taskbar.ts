@@ -1,5 +1,5 @@
 import { c, canvas, newImage, settings } from ".";
-import { addApp, openApplication } from "./AppUtils";
+import { addApp, getAppSourceCode, openApplication } from "./AppUtils";
 import { Button } from "./Button";
 import { OSElement } from "./OSElement";
 import { storage } from "./Storage";
@@ -13,13 +13,14 @@ export class Taskbar implements OSElement {
     await storage.setItem("apps", (await storage.getItem("apps")) || {});
     await addApp("/prgm/appStore");
     let apps = await storage.getItem("apps");
-    for (const name in apps) {
+    for (const name of apps) {
       await this.makeIcon(name);
     }
   }
 
   async makeIcon(name: string) {
-    let iconPath = (await storage.getItem("apps"))[name].split("\n")[0];
+    let iconPath = (await getAppSourceCode(name)).split("\n")[0];
+
     if (!iconPath.startsWith("##icon=")) return;
     else iconPath = iconPath.slice(7);
     const icon = await newImage(iconPath);

@@ -55,7 +55,10 @@ const config = {
     ]
   },
   resolve: {
-    extensions: [".tsx", ".ts", ".jsx", ".js", ".scss", "..."]
+    extensions: [".tsx", ".ts", ".jsx", ".js", ".scss", "..."],
+    fallback: {
+      fs: require.resolve("fs")
+    }
   }
 };
 

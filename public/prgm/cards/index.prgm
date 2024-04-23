@@ -1,0 +1,25 @@
+##icon=image/appStore.svg
+window = Window("Cards", 800, 600);
+g = window.getGraphics();
+
+i = 0;
+
+g.fillStyle = "black";
+
+animSpeed = 50;
+cardWidth = 100;
+
+while (i < animSpeed) {
+  g.clearScreen();
+  g.fillRect((i * (cardWidth / animSpeed)) / 2, 0, animSpeed * (cardWidth / animSpeed) - i, 200);
+  i += 1;
+  sleep(1000 / 60);
+}
+i = animSpeed;
+while (i >= 0) {
+  g.clearScreen();
+  g.fillStyle = "orange";
+  g.fillRect((i * (cardWidth / animSpeed)) / 2, 0, animSpeed * (cardWidth / animSpeed) - i, 200);
+  i -= 1;
+  sleep(1000 / 60);
+}
